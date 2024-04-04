@@ -170,13 +170,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print("No response generated.")
 
     # Save outgoing response to outbox table
-    # connection = create_connection()
-    # if response:
-    #     insert_outbox_message(connection, chat_id, message_type, response, BOT_USERNAME, date)
-    #     connection.close()
-    #     await update.message.reply_text(response)
-
-    # Save outgoing response to outbox table
     connection = create_connection()
     if response == 'Mei senpaiiiii waipuu':
         # Send a cat image
@@ -271,14 +264,22 @@ async def search_and_reply_mhs(update: Update, context: ContextTypes.DEFAULT_TYP
         response_text = f"Mahasiswa ditemukan:\nNama: {result['nama']}\nNIM: {result['nim']}\nAlamat: {result['alamat']}"
     else:
         response_text = "Maaf, mahasiswa tidak ditemukan."
+
+    chat_id = update.message.chat_id
+    message_type = "text"
+    user_bot = BOT_USERNAME
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    connection = create_connection()
+    insert_outbox_message(connection, chat_id, message_type, response_text, user_bot, date)
+    connection.close()
+
     await update.message.reply_text(response_text)
 
 # Menangani pencarian mahasiswa ketika pengguna mengirim pesan teks
 async def handle_text_message_mhs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.message.text.strip()
     await search_and_reply_mhs(update, context, query)
-
-
 
 ###############################################################
 #Menu Matakuliah#
@@ -318,6 +319,16 @@ async def search_and_reply_matkul(update: Update, context: ContextTypes.DEFAULT_
         response_text = f"Matakuliah ditemukan:\nMatakuliah: {result['nama_matakuliah']}\nKode: {result['kode_matakuliah']}"
     else:
         response_text = "Maaf, matakuliah tidak ditemukan."
+
+    chat_id = update.message.chat_id
+    message_type = "text"
+    user_bot = BOT_USERNAME
+    date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    connection = create_connection()
+    insert_outbox_message(connection, chat_id, message_type, response_text, user_bot, date)
+    connection.close()
+    
     await update.message.reply_text(response_text)
 
 # Menangani pencarian matakuliah ketika pengguna mengirim pesan teks
