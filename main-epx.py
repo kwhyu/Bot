@@ -13,13 +13,11 @@ load_dotenv()
 
 # Access your token
 TOKEN = os.getenv("TOKEN")
-
 BOT_USERNAME = 'kwhy_bot'
 
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = ""
-# os.getenv("DB_PASSWORD")
+DB_PASSWORD = "" # os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
 user_menu_selection = {}
@@ -153,13 +151,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await search_and_reply_matkul(update, context, text)
         del user_menu_selection[user_id]
     else:
-        await update.message.reply_text("Kwhy tidak mengerti, silahkan gunakan perintah /custom untuk memulai pertanyaan")
-
+        pass
+        # await update.message.reply_text("Kwhy tidak mengerti, silahkan gunakan perintah /custom untuk memulai pertanyaan")
+    
     # Only handle messages that are not callback from menu selection
     if update.message.text and not update.callback_query:
         response: str = handle_response(text)
+    # response: str = handle_response(text)
 
     print('Bot:', response)
+
+    if response:
+        # Save outgoing response to outbox table
+        connection = create_connection()
+        insert_outbox_message(connection, chat_id, message_type, response, BOT_USERNAME, date)
+        connection.close()
+    else:
+        print("No response generated.")
+
+    # Save outgoing response to outbox table
+    # connection = create_connection()
+    # if response:
+    #     insert_outbox_message(connection, chat_id, message_type, response, BOT_USERNAME, date)
+    #     connection.close()
+    #     await update.message.reply_text(response)
 
     # Save outgoing response to outbox table
     connection = create_connection()
@@ -182,7 +197,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         insert_outbox_message(connection, chat_id, message_type, response, BOT_USERNAME, date)
         connection.close()
         await update.message.reply_text(response)
-
 #Respon
 def handle_response(text: str) -> str:
     processed: str = text.lower()
@@ -202,7 +216,7 @@ def handle_response(text: str) -> str:
     if '/pelabuild' in processed:
         return 'pela build'
     
-    # return 'Kwhy tidak mengerti, silahkan gunakan perintah /custom untuk memulai pertanyaan'
+    return 'Kwhy tidak mengerti, silahkan gunakan perintah /custom untuk memulai pertanyaan'
 
 async def handle_custom_menu_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -289,8 +303,8 @@ async def search_matkul(query: str) -> str:
     connection = create_connection()
     cursor = connection.cursor(dictionary=True)
 
-    sql_query = "SELECT nama_matakuliah, kode_matakuliah FROM matakuliah WHERE nama_matakuliah = %s"
-    cursor.execute(sql_query, (query,))
+    sql_query = "SELECT nama_matakuliah, kode_matakuliah FROM matakuliah WHERE nama_matakuliah = %s OR kode_matakuliah = %s"
+    cursor.execute(sql_query, (query, query))
 
     # Get the query result
     result = cursor.fetchone()
